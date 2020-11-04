@@ -6,7 +6,7 @@ A tool for pulling different apt- and rpm-based repositories via rsync or web wi
 
 ## WARNING!
 
-Be aware that most repositories need a huge amount of disk-space!
+Be aware that most repositories need a huge amount of disk-space!  
 It's recommended to store your pulls into a separate Volume.
 
 ## Startup
