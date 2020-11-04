@@ -4,6 +4,11 @@
 
 A tool for pulling different apt- and rpm-based repositories via rsync or web with automated config creation for related repositories via private web-provision.
 
+## WARNING!
+
+Be aware that most repositories need a huge amount of disk-space!
+It's recommended to store your pulls into a separate Volume.
+
 ## Startup
 
 Add the executable flag to reflector.sh  
