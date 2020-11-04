@@ -18,16 +18,16 @@ basedest - main store for all pulled repositories
 repourl - basic URL where your webservice resides.
 
 ### sources-yum-gpgkeys.conf
-get additional gpgkeys from used repositories
+Get additional gpgkeys from used repositories
 
 ### sources-yum-rsync.conf
-all rsync-based repositiories  
+All rsync-based repositiories  
 source, destination and tags have to be synced by line
 
 ### sources-yum-web.conf
-all web-based repositories (http/https)  
+All web-based repositories (http/https)  
 source, options and tags have to be synced by line  
-refer wget for options
+Refer wget for options
 
 ### sources-apt-patterns
 keyring - path to the local gpg keyring  
