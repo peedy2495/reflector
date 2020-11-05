@@ -39,6 +39,7 @@ keyring - path to the local gpg keyring
 You have to import the public repository gpg-key to your local keyring first, to be able to pull from defined repository.
 
 ### sources-apt-[source].conf
+dist - name of the Distribution; like: "ubuntu"
 server - TLD of repository; like: "ftp.de.debian.org"  
 inPath - subdirectory in TLD; like: "debian"  
 release - relevant releases; like: "buster,buster-updates,buster-backports"  

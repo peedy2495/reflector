@@ -26,9 +26,12 @@ function get_required() {
 get_required reflector.conf
 
 #########################
-### YUM/DNF Reposiories
+### RPM-Section
 
-#get_required reflector-yum.bash
+get_required lib/reflector-RPM
+
+
+#get_required lib/reflector-yum
 #
 ##remove all previous repofiles for recreation
 #if [ -d "${basedest}.repofiles" ]; then
@@ -48,49 +51,13 @@ get_required reflector.conf
 #yum_gpgkeys
 
 ##########################
-#### APT Ubuntu Mirror
-get_required reflector-apt.bash
-get_required sources-apt-patterns.conf
-#
-##remove all previous repofiles for recreation
-if [ -d "${basedest}.apt" ]; then
-    rm -rf "${basedest}.apt"
-fi
-#
-## Main Rerpository
-get_source sources-apt-archive.canonical.com-ubuntu.conf
-apt_debmirror
-#
+#### APT - Section
 
-##########################
-#### APT Debian Mirror
-#get_required reflector-apt.bash
-#get_required sources-apt-patterns.conf
-#
-##remove all previous repofiles for recreation
-#if [ -d "${basedest}.apt" ]; then
-#    rm -rf "${basedest}.apt"
-#fi
-#
-## Main Rerpository
-#get_source sources-apt-ftp.de.debian.org.conf
-#apt_debmirror
-#
-## Security Repository
-#get_source sources-apt-security.debian.org.conf
-#apt_debmirror
-#
-### Proxmox PVE repository
-#get_source sources-apt-enterprise.proxmox.com.conf
-#apt_debmirror
-#
-### Docker CE repository
-#get_source sources-apt-download.docker.com.conf
-#apt_debmirror
-#
-### GlusterFS repository
-#get_source sources-apt-download.gluster.org.conf
-#apt_debmirror
-#
-### Deploy to Mobile Drive
-##rsync -rtv /data/deploy/* /run/media/bigdata/te_we/deploy/ --delete-after
+get_required lib/reflector-apt
+get_required apt-keyring.conf
+
+while read conf
+do
+    get_source sources/$conf
+    apt_debmirror
+done < <(ls sources|grep sources-apt)

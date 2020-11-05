@@ -1,3 +1,4 @@
+#!/bin/bash
 
 function create_yum-repofile() {
     if [ ! -d "$path" ]; then

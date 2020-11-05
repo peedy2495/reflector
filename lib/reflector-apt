@@ -1,0 +1,30 @@
+#!/bin/bash
+
+function apt_debmirror() {
+    if [[ ${enabled,,} =~ ^(1|yes|true)$ ]]; then
+        if [ -d "${basedest}.apt/$source" ]; then
+            rm -rf "${basedest}.apt/$source"
+        fi
+        debmirror       -a $arch \
+                        --nosource \
+                        -s $section \
+                        -h $server \
+                        -d $release \
+                        -r $inPath \
+                        --progress \
+                        --method=$proto \
+                        --keyring=$keyring \
+                        $outPath
+        apt_lists
+    fi
+}
+
+function apt_lists() {
+    if [ ! -d "${basedest}.apt/$source" ]; then
+        mkdir -p ${basedest}.apt/$source
+    fi
+    releases=(${release//,/ })
+    for rel in "${releases[@]}"; do
+        echo "deb $repourl/$inPath $rel ${section//,/ }" >>${basedest}.apt/$source/$server.${rel%%/*}.list
+    done
+}
