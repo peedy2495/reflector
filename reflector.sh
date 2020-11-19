@@ -1,9 +1,48 @@
 #!/bin/bash
-cd "$(dirname "$0")"
+
 #Get all repositories from online sources
 # estimated total Size ~650GB
 
-function get_source() {
+main() {
+    cd "$(dirname "$0")"
+    get_required reflector.conf
+    do_yum
+    #do_apt
+    exit 0
+ }
+
+do_yum() {
+###############################
+### Repositories Managed by YUM
+
+    while read conf
+    do
+        if get_source $conf; then
+            yum_mirror
+        fi
+    done < <(find sources -name 'yum-*')
+    
+    ## get GPG-Keys for Package verification
+    if get_source yum-gpgkeys.conf; then
+        yum_gpgkeys
+    fi
+}
+
+do_apt() {
+###############################
+### Repositories Managed by APT
+    get_required apt-keyring.conf
+
+    while read conf
+    do
+        if get_source $conf; then
+            apt_debmirror
+        fi
+    done < <(find sources -name 'apt-*')
+    }
+
+get_source() {
+# check and read the called sourcefile
     local file=$1
     if [ -f "$file" ]; then
         source $file
@@ -13,7 +52,10 @@ function get_source() {
     fi
 }
 
-function get_required() {
+get_required() {
+# check and read the called sourcefile like get_source().
+# but the called files are striktly required.
+# Because of this, any fail ends into a hard interrupt.
     local file=$1
     if [ -f "$file" ]; then
         source $file      
@@ -23,41 +65,119 @@ function get_required() {
     fi
 }
 
-get_required reflector.conf
+yum_mirror() {
+    if [[ ${enabled,,} =~ ^(1|yes|true)$ ]]; then
 
-#########################
-### RPM-Section
+        if [[ ${pull,,} =~ ^(rsync)$ ]]; then
+            yum_rsync
+        elif [[ ${pull,,} =~ ^(web|wget|http|https|ftp|sftp)$ ]]; then
+            yum_wget
+        fi
+    fi
+}
 
-get_required lib/reflector-RPM
+create_yum-repofile() {
+    if [ ! -d "$path" ]; then
+        mkdir -p $path
+    fi
+    repofile="$path/${tag}.repo"
+    echo "### auto generated file from upfRepos.sh as of $(date)" >$repofile
+    echo "[${tag}]" >>$repofile
+    echo "name=$descr" >>$repofile
+    echo "baseurl=$repourl/${destination[$i]}" >>$repofile
+    echo "enabled=1" >>$repofile
+    echo "metadata_expire=7d" >>$repofile
+    echo "repo_gpgcheck=0" >>$repofile
+    echo "type=rpm" >>$repofile
+    echo "gpgcheck=0" >>$repofile
+    echo "skip_if_unavailable=False" >>$repofile
+}
 
+yum_rsync() {
+    echo "syncing from ${source} to ${basedest}${destination} ..."
+    if [ ! -d "${basedest}${destination}" ]; then
+        mkdir -p ${basedest}${destination}
+    fi
+    rsync -avrt "rsync://${source}" "${basedest}${destination}" --delete-after
+    if [[ "${tag}" != "skip" ]]; then
+        path="${basedest}.repofiles/${yumdir}"
+        create_yum-repofile
+    fi
+}
 
-#get_required lib/reflector-yum
-#
-##remove all previous repofiles for recreation
-#if [ -d "${basedest}.repofiles" ]; then
-#    rm -rf "${basedest}.repofiles"
-#fi
-#
-### Yum-Repos via rsync
-#get_source sources-yum-rsync.conf
-#yum_rsync
-#
-### Yum-Repos via wget
-#get_source sources-yum-web.conf
-#yum_wget
-#
-### get GPG-Keys for Package verification
-#get_source sources-yum-gpgkeys.conf
-#yum_gpgkeys
+yum_wget() {
+    echo "syncing from ${source} to ${basedest}${destination} ..."
+    wget \
+        --no-http-keep-alive\
+        --no-cache\
+        --no-cookies\
+        -e robots=off\
+        -r\
+        -np\
+        -N\
+        -c\
+        -R "index.html*,robots.txt*"\
+        ${options}\
+        ${source}\
+        -P ${basedest}
+    if [[ "${tag}" != "skip" ]]; then
+        dest="${source}"
+        dest="${dest#http://}"
+        dest="${dest#https://}"
+        destination="$dest"
+        path="${basedest}.repofiles/${tag}"
+        create_yum-repofile
+    fi
+}
 
-##########################
-#### APT - Section
+yum_gpgkeys() {
+    for key in "${keys[@]}"; do
+        ## Remove protocol part of url  ##
+        host="${key#http://}"
+        host="${host#https://}"
+        host="${host#ftp://}"
+        host="${host#scp://}"
+        host="${host#scp://}"
+        host="${host#sftp://}"
+        ## Remove username and/or username:password part of URL  ##
+        host="${host#*:*@}"
+        host="${host#*@}"
+        ## Remove rest of urls ##
+        host=${host%%/*}
+ 
+        wget $key -O "${basedest}/.keys/$host.key"
+    done
+}
 
-get_required lib/reflector-apt
-get_required apt-keyring.conf
+apt_debmirror() {
+    if [[ ${enabled,,} =~ ^(1|yes|true)$ ]]; then
+        if [ -d "${basedest}.apt/$source" ]; then
+            rm -rf "${basedest}.apt/$source"
+        fi
+        debmirror       -a $arch \
+                        --nosource \
+                        -s $section \
+                        -h $server \
+                        -d $release \
+                        -r $inPath \
+                        --progress \
+                        --method=$proto \
+                        --keyring=$keyring \
+                        $outPath
+        apt_lists
+    fi
+}
 
-while read conf
-do
-    get_source sources/$conf
-    apt_debmirror
-done < <(ls sources|grep sources-apt)
+apt_lists() {
+    if [ ! -d "${basedest}.apt/$source" ]; then
+        mkdir -p ${basedest}.apt/$source
+    fi
+    releases=(${release//,/ })
+    for rel in "${releases[@]}"; do
+        echo "deb $repourl/$inPath $rel ${section//,/ }" >>${basedest}.apt/$source/$server.${rel%%/*}.list
+    done
+}
+
+#####################################
+# Call main function to run this tool
+main
