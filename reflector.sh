@@ -4,10 +4,11 @@
 # estimated total Size ~650GB
 
 main() {
-    cd "$(dirname "$0")"
+    rdir="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+    cd ${rdir}
     get_required reflector.conf
     do_yum
-    #do_apt
+    do_apt
     exit 0
  }
 
@@ -23,7 +24,8 @@ do_yum() {
     done < <(find sources -name 'yum-*')
     
     ## get GPG-Keys for Package verification
-    if get_source yum-gpgkeys.conf; then
+    yumgpg=$(find sources -name 'yum-gpgkeys.conf')
+    if get_source ${yumgpg}; then
         yum_gpgkeys
     fi
 }
@@ -31,6 +33,7 @@ do_yum() {
 do_apt() {
 ###############################
 ### Repositories Managed by APT
+    pwd
     get_required apt-keyring.conf
 
     while read conf
@@ -65,6 +68,7 @@ get_required() {
     fi
 }
 
+### check repo-activation and switch by pulltype
 yum_mirror() {
     if [[ ${enabled,,} =~ ^(1|yes|true)$ ]]; then
 
@@ -74,8 +78,12 @@ yum_mirror() {
             yum_wget
         fi
     fi
+    ## unset vars intentionally left duplicates 
+    unset tag descr src destination yumdir pull enabled     #rsync config
+    unset tag descr src yumdir pull options cleanup enabled #wget config
 }
 
+### create repository definition for yum/dnf pointing to your private webhost
 create_yum-repofile() {
     if [ ! -d "$path" ]; then
         mkdir -p $path
@@ -93,21 +101,30 @@ create_yum-repofile() {
     echo "skip_if_unavailable=False" >>$repofile
 }
 
+### create/update repo with rysnc
 yum_rsync() {
-    echo "syncing from ${source} to ${basedest}${destination} ..."
+    echo "syncing from ${src} to ${basedest}${destination} ..."
     if [ ! -d "${basedest}${destination}" ]; then
         mkdir -p ${basedest}${destination}
     fi
-    rsync -avrt "rsync://${source}" "${basedest}${destination}" --delete-after
+    rsync -avrt "rsync://${src}" "${basedest}${destination}" --delete-after
     if [[ "${tag}" != "skip" ]]; then
         path="${basedest}.repofiles/${yumdir}"
         create_yum-repofile
     fi
 }
 
+### create/update repo with wget
 yum_wget() {
-    echo "syncing from ${source} to ${basedest}${destination} ..."
+    dest="${src}"
+    dest="${dest#http://}"
+    dest="${dest#https://}"
+    dest="${dest#ftp://}"
+    dest="${dest#sftp://}"
+    destination="$dest"
+    echo "syncing from ${src} to ${basedest}${destination} ..."
     wget \
+        -nv\
         --no-http-keep-alive\
         --no-cache\
         --no-cookies\
@@ -118,18 +135,30 @@ yum_wget() {
         -c\
         -R "index.html*,robots.txt*"\
         ${options}\
-        ${source}\
+        ${src}\
         -P ${basedest}
+    if [[ ${cleanup,,} =~ ^(1|yes|true)$ ]]; then
+        yum_wget_cleanup
+    fi
     if [[ "${tag}" != "skip" ]]; then
-        dest="${source}"
-        dest="${dest#http://}"
-        dest="${dest#https://}"
-        destination="$dest"
         path="${basedest}.repofiles/${tag}"
         create_yum-repofile
     fi
 }
 
+### remove deprecated local files
+yum_wget_cleanup() {
+    cd ${basedest}${destination}
+    while read target; do
+        if ! wget -nv --spider ${src}${target}; then
+            rm -f ${target}
+            echo "removed: File ${target}" 
+        fi
+    done < <(find *)
+    cd ${rdir}
+}
+
+### pull necessary gpg-key for offline-clients
 yum_gpgkeys() {
     for key in "${keys[@]}"; do
         ## Remove protocol part of url  ##
@@ -145,14 +174,15 @@ yum_gpgkeys() {
         ## Remove rest of urls ##
         host=${host%%/*}
  
-        wget $key -O "${basedest}/.keys/$host.key"
+        wget $key -c -N -O "${basedest}/.keys/$host.key"
     done
 }
 
+### create/update debian based repo
 apt_debmirror() {
     if [[ ${enabled,,} =~ ^(1|yes|true)$ ]]; then
-        if [ -d "${basedest}.apt/$source" ]; then
-            rm -rf "${basedest}.apt/$source"
+        if [ -d "${basedest}.apt/$src" ]; then
+            rm -rf "${basedest}.apt/$src"
         fi
         debmirror       -a $arch \
                         --nosource \
@@ -168,13 +198,14 @@ apt_debmirror() {
     fi
 }
 
+### create repository definition for apt pointing to your private webhost
 apt_lists() {
-    if [ ! -d "${basedest}.apt/$source" ]; then
-        mkdir -p ${basedest}.apt/$source
+    if [ ! -d "${basedest}.apt/$src" ]; then
+        mkdir -p ${basedest}.apt/$src
     fi
     releases=(${release//,/ })
     for rel in "${releases[@]}"; do
-        echo "deb $repourl/$inPath $rel ${section//,/ }" >>${basedest}.apt/$source/$server.${rel%%/*}.list
+        echo "deb $repourl/$inPath $rel ${section//,/ }" >>${basedest}.apt/$src/$server.${rel%%/*}.list
     done
 }
 
