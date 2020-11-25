@@ -1,6 +1,6 @@
 # reflector
 
-## Intruduction
+## Introduction
 A tool for pulling different apt- and rpm-based repositories via rsync or web with automated config creation for related repositories via private web-provision.
 <br/><br/>
 
@@ -100,8 +100,12 @@ no additional options provided.
 The URL-path has to be defined without protocol prefix.  
 
 #### **web,wget,http,https,ftp,sftp**
+The URL-Path has to defined with protocol prefix.  
+Refer wget manpage for protocol capabilities.
+```
 options     - refer wget manpage for supported options  
 cleanup     - remove locally non-existent/removed files on host. Considered values are 1/yes/true
+```
 <br/><br/>
 Remark to options:  
 only use doublequotes for options, otherwise the content will be ignored by wget.  
