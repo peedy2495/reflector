@@ -24,8 +24,11 @@ repourl - basic URL where your webservice resides.
 <br/><br/>
 
 ### config/../apt-keyring.conf
-keyring - path to trustedkeys.gpg
-<br/><br/>
+keyring - path to trustedkeys.gpg  
+Example Import of a downloaded public GPG-Key  
+```
+gpg --no-default-keyring --keyring /path/to/trustedkeys.gpg --import download.gluster.org.pub
+```
 
 ### config/../yum-gpgkeys.conf
 keys - array of URLs to public gpgkeys related to used repositories
@@ -33,6 +36,7 @@ keys - array of URLs to public gpgkeys related to used repositories
 
 ### Repository configs
 All config files may placed to different subfolders.
+Some sample Folders and config Files (disabled) are included to get closer with the configuration. Regarding to apt, don't forget to import needed GPG-Keys before trying any apt-configs.
 There are three types of Repository Configs
 <br/><br/>
 
