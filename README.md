@@ -31,7 +31,7 @@ keyring         - path to trustedkeys.gpg to be able to copy the repository
 
 Example import of a downloaded public GPG-Key  
 ```
-wget https://download.gluster.org/pub/gluster/glusterfs/7/rsa.pub -P [basedest]/.keys/keypath
+wget https://download.gluster.org/pub/gluster/glusterfs/7/rsa.pub -P [basedest]/.keys/keypath/goodfilename.pub
 gpg --no-default-keyring --keyring [keyring] --import [basedest]/.keys/keypath/rsa.pub
 ```
 Required GPG-keys have to be imported into the clients, too. 
