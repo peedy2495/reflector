@@ -12,7 +12,8 @@ It's recommended to store your pulls into a separate Volume.
 ## Startup
 Add the executable flag to `reflector.sh`  
 Start `reflector.sh` after modifying related configuration-files.  
-Repository config files for rpm-sources will be stored in [basedest]/.repofiles.  
+Repository config files for rpm-sources will be stored in [basedest]/.repofiles.
+Repository config files for apt-sources will be stored in [basedest]/.apt.
 <br/><br/>
 
 ## **Configuration**
