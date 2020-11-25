@@ -1,49 +1,91 @@
 # reflector
 
 ## Intruduction
-
 A tool for pulling different apt- and rpm-based repositories via rsync or web with automated config creation for related repositories via private web-provision.
+<br/><br/>
 
 ## WARNING!
-
-Be aware that most repositories need a huge amount of disk-space!  
+Be aware that most repositories are eating a huge amount of disk-space!  
 It's recommended to store your pulls into a separate Volume.
+<br/><br/>
 
 ## Startup
-
-Add the executable flag to reflector.sh  
-Start reflector.sh after modifying related configuration-files.  
+Add the executable flag to `reflector.sh`  
+Start `reflector.sh` after modifying related configuration-files.  
 Repository config files for rpm-sources will be stored in [basedest]/.repofiles.  
-apt-configs are not supported yet ...
+<br/><br/>
 
-## Configuration
+## **Configuration**
 
-### reflector.conf
+### config/reflector.conf
 basedest - main store for all pulled repositories  
 repourl - basic URL where your webservice resides.
+<br/><br/>
 
-### sources-yum-gpgkeys.conf
-Get additional gpgkeys from used repositories
+### config/../apt-keyring.conf
+keyring - path to trustedkeys.gpg
+<br/><br/>
 
-### sources-yum-rsync.conf
-All rsync-based repositiories  
-source, destination and tags have to be synced by line
+### config/../yum-gpgkeys.conf
+keys - array of URLs to public gpgkeys related to used repositories
+<br/><br/>
 
-### sources-yum-web.conf
-All web-based repositories (http/https)  
-source, options and tags have to be synced by line  
-Refer wget for options
+### Repository configs
+All config files may placed to different subfolders.
+There are three types of Repository Configs
+<br/><br/>
 
-### sources-apt-patterns
-keyring - path to the local gpg keyring  
-You have to import the public repository gpg-key to your local keyring first, to be able to pull from defined repository.
+#### **Managed by YUM/DNF**
+Fileprefix: yum-  
+*Content:*
+```
+tag - tag used by packagemanager
+descr - repository description
+src - URL-path
+destination - additional subpath to [basedest]
+yumdir - additional path to [basedest]/.repofile for repofile creation
+pull - pull type; supported: rsync,web,wget,http,https,ftp,sftp. REFER #Pulltypes for additional options!
+enabled - proceed this config? Considered values are 1/yes/true
+```
+<br/><br/>
 
-### sources-apt-[source].conf
-dist - name of the Distribution; like: "ubuntu"
-server - TLD of repository; like: "ftp.de.debian.org"  
-inPath - subdirectory in TLD; like: "debian"  
-release - relevant releases; like: "buster,buster-updates,buster-backports"  
-section - relevant sections; like: "main,contrib,non-free"  
-arch - used cpu-architecture; like : "i386,amd64"  
-proto - used transfer-protocol; like: "http"  
-outPath - destination path; recommended: "${basedest}${inPath}"
+#### **Managed by apt**
+Fileprefix: apt-  
+*Content:*
+```
+src - additional path to [basedest]/.apt for repofile creation
+server - Servers's domainname
+inPath - Path within the domainname
+release - Version of the distributuion
+section - Distribution sections
+arch - needed CPU architectures
+proto - used transfer protocol; supported: rsync,http,ftp
+outPath - path to store to; unlike rpm-based repos the full path has to be defined. Example: ${basedest}my.example.com/${inPath}
+enabled - proceed this config? Considered values are 1/yes/true
+```
+<br/><br/>
+
+#### **Unmanaged or unsupported Packagemanager**
+Fileprefix: misc-  
+*Content:*  
+```
+descr - (optional) repository description
+src - URL-path
+destination - additional subpath to [basedest]
+pull - pull type; supported: rsync,web,wget,http,https,ftp,sftp. REFER #Pulltypes for additional options!
+enabled - proceed this config? Considered values are 1/yes/true
+```
+
+### **Pulltypes**
+#### **rsync**
+no additional options provided.  
+The URL-Path has to be defined without protocol prefix.  
+<br/><br/>
+
+#### **web,wget,http,https,ftp,sftp**
+options - refer wget manpage for supported options  
+cleanup - remove locally non-existent/removed files on host. Considered values are 1/yes/true
+<br/><br/>
+Remark to options:  
+only use doublequotes for options, otherwise the content will be ignored by wget.  
+Predefined reject options are ` -R "index.html*,robots.txt*" ` .

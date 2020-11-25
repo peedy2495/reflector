@@ -6,9 +6,10 @@
 main() {
     rdir="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
     cd ${rdir}
-    get_required reflector.conf
+    get_required config/reflector.conf
     do_yum
     do_apt
+    do_misc
     exit 0
  }
 
@@ -19,12 +20,12 @@ do_yum() {
     while read conf
     do
         if get_source $conf; then
-            yum_mirror
+            rpm_mirror
         fi
-    done < <(find sources -name 'yum-*')
+    done < <(find config -name 'yum-*')
     
     ## get GPG-Keys for Package verification
-    yumgpg=$(find sources -name 'yum-gpgkeys.conf')
+    yumgpg=$(find config -name 'yum-gpgkeys.conf')
     if get_source ${yumgpg}; then
         yum_gpgkeys
     fi
@@ -33,16 +34,28 @@ do_yum() {
 do_apt() {
 ###############################
 ### Repositories Managed by APT
-    pwd
-    get_required apt-keyring.conf
+    aptgpg=$(find config -name 'apt-keyring.conf')
+    get_required ${aptgpg}
 
     while read conf
     do
         if get_source $conf; then
             apt_debmirror
         fi
-    done < <(find sources -name 'apt-*')
+    done < <(find config -name 'apt-*')
     }
+
+do_misc() {
+###############################
+### Misc raw Repositories
+
+    while read conf
+    do
+        if get_source $conf; then
+            rpm_mirror
+        fi
+    done < <(find config -name 'misc-*')
+}
 
 get_source() {
 # check and read the called sourcefile
@@ -69,13 +82,13 @@ get_required() {
 }
 
 ### check repo-activation and switch by pulltype
-yum_mirror() {
+rpm_mirror() {
     if [[ ${enabled,,} =~ ^(1|yes|true)$ ]]; then
 
         if [[ ${pull,,} =~ ^(rsync)$ ]]; then
-            yum_rsync
+            rpm_rsync
         elif [[ ${pull,,} =~ ^(web|wget|http|https|ftp|sftp)$ ]]; then
-            yum_wget
+            rpm_wget
         fi
     fi
     ## unset vars intentionally left duplicates 
@@ -102,20 +115,20 @@ create_yum-repofile() {
 }
 
 ### create/update repo with rysnc
-yum_rsync() {
+rpm_rsync() {
     echo "syncing from ${src} to ${basedest}${destination} ..."
     if [ ! -d "${basedest}${destination}" ]; then
         mkdir -p ${basedest}${destination}
     fi
     rsync -avrt "rsync://${src}" "${basedest}${destination}" --delete-after
-    if [[ "${tag}" != "skip" ]]; then
+    if [[ ! -z "${yumdir}" ]]; then
         path="${basedest}.repofiles/${yumdir}"
         create_yum-repofile
     fi
 }
 
 ### create/update repo with wget
-yum_wget() {
+rpm_wget() {
     dest="${src}"
     dest="${dest#http://}"
     dest="${dest#https://}"
@@ -138,16 +151,16 @@ yum_wget() {
         ${src}\
         -P ${basedest}
     if [[ ${cleanup,,} =~ ^(1|yes|true)$ ]]; then
-        yum_wget_cleanup
+        rpm_wget_cleanup
     fi
-    if [[ "${tag}" != "skip" ]]; then
+    if [[ ! -z "${yumdir}" ]]; then
         path="${basedest}.repofiles/${tag}"
         create_yum-repofile
     fi
 }
 
 ### remove deprecated local files
-yum_wget_cleanup() {
+rpm_wget_cleanup() {
     cd ${basedest}${destination}
     while read target; do
         if ! wget -nv --spider ${src}${target}; then
