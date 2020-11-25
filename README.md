@@ -35,7 +35,7 @@ All config files may placed to different subfolders.
 There are three types of Repository Configs
 <br/><br/>
 
-#### **Managed by YUM/DNF**
+#### **RPMs managed by YUM/DNF**
 Fileprefix: yum-  
 *Content:*
 ```
@@ -49,7 +49,7 @@ enabled - proceed this config? Considered values are 1/yes/true
 ```
 <br/><br/>
 
-#### **Managed by apt**
+#### **Managed by APT**
 Fileprefix: apt-  
 *Content:*
 ```
@@ -65,7 +65,7 @@ enabled - proceed this config? Considered values are 1/yes/true
 ```
 <br/><br/>
 
-#### **Unmanaged or unsupported Packagemanager**
+#### **RPMs unmanaged or unsupported packagemanager**
 Fileprefix: misc-  
 *Content:*  
 ```
@@ -76,7 +76,7 @@ pull - pull type; supported: rsync,web,wget,http,https,ftp,sftp. REFER #Pulltype
 enabled - proceed this config? Considered values are 1/yes/true
 ```
 
-### **Pulltypes**
+### **Pulltypes for rpm-based repositories**
 #### **rsync**
 no additional options provided.  
 The URL-Path has to be defined without protocol prefix.  
