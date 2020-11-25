@@ -24,14 +24,17 @@ repourl - basic URL where your webservice resides.
 <br/><br/>
 
 ### config/../apt-keyring.conf
-keyring - path to trustedkeys.gpg  
+keyring - path to trustedkeys.gpg to be able to copy the repository 
 Example Import of a downloaded public GPG-Key  
 ```
-gpg --no-default-keyring --keyring /path/to/trustedkeys.gpg --import download.gluster.org.pub
+wget https://download.gluster.org/pub/gluster/glusterfs/7/rsa.pub -P [basedest]/.keys/keypath
+gpg --no-default-keyring --keyring [keyring] --import [basedest]/.keys/keypath/rsa.pub
 ```
+Required GPG-Keys have to be imported into the clients, too. 
 
 ### config/../yum-gpgkeys.conf
-keys - array of URLs to public gpgkeys related to used repositories
+keys - array of URLs to public gpgkeys related to used repositories  
+These will only be downloaded to [basedets]/.keys and have to be imported into the clients
 <br/><br/>
 
 ### Repository configs
