@@ -12,48 +12,56 @@ It's recommended to store your pulls into a separate Volume.
 ## Startup
 Add the executable flag to `reflector.sh`  
 Start `reflector.sh` after modifying related configuration-files.  
-Repository config files for rpm-sources will be stored in [basedest]/.repofiles.  
-Repository config files for apt-sources will be stored in [basedest]/.apt.
+Repository config files for rpm-sources will be stored in `[basedest]/.repofiles` .  
+Repository config files for apt-sources will be stored in `[basedest]/.apt` .
 <br/><br/>
 
 ## **Configuration**
 
-### config/reflector.conf
-basedest - main store for all pulled repositories  
-repourl - basic URL where your webservice resides.
-<br/><br/>
+*config/reflector.conf*
+```
+basedest        - main store for all pulled repositories  
+repourl         - basic URL where your webservice resides.
+```
 
-### config/../apt-keyring.conf
-keyring - path to trustedkeys.gpg to be able to copy the repository 
-Example Import of a downloaded public GPG-Key  
+*config/../apt-keyring.conf*
+```
+keyring         - path to trustedkeys.gpg to be able to copy the repository 
+```
+
+Example import of a downloaded public GPG-Key  
 ```
 wget https://download.gluster.org/pub/gluster/glusterfs/7/rsa.pub -P [basedest]/.keys/keypath
 gpg --no-default-keyring --keyring [keyring] --import [basedest]/.keys/keypath/rsa.pub
 ```
-Required GPG-Keys have to be imported into the clients, too. 
+Required GPG-keys have to be imported into the clients, too. 
 
-### config/../yum-gpgkeys.conf
-keys - array of URLs to public gpgkeys related to used repositories  
-These will only be downloaded to [basedets]/.keys and have to be imported into the clients
+*config/../yum-gpgkeys.conf*
+```
+keys        - array of URLs to public gpgkeys related to used repositories  
+```
+These will only be downloaded to `[basedets]/.keys` and have to be imported into the clients
 <br/><br/>
 
 ### Repository configs
 All config files may placed to different subfolders.
-Some sample Folders and config Files (disabled) are included to get closer with the configuration. Regarding to apt, don't forget to import needed GPG-Keys before trying any apt-configs.
-There are three types of Repository Configs
+Some sample folders and config files (disabled) are included to get closer with the configuration.  
+Regarding to apt, don't forget to import needed GPG-keys before trying any apt-configs.  
+There are three types of repository configs
 <br/><br/>
 
 #### **RPMs managed by YUM/DNF**
 Fileprefix: yum-  
 *Content:*
 ```
-tag - tag used by packagemanager
-descr - repository description
-src - URL-path
+tag         - tag used by packagemanager
+descr       - repository description
+src         - URL-path
 destination - additional subpath to [basedest]
-yumdir - additional path to [basedest]/.repofile for repofile creation
-pull - pull type; supported: rsync,web,wget,http,https,ftp,sftp. REFER #Pulltypes for additional options!
-enabled - proceed this config? Considered values are 1/yes/true
+yumdir      - additional path to [basedest]/.repofile for repofile creation
+pull        - pull type; supported: rsync,web,wget,http,https,ftp,sftp
+              REFER #Pulltypes for additional options!
+enabled     - proceed this config? Considered values are 1/yes/true
 ```
 <br/><br/>
 
@@ -61,15 +69,16 @@ enabled - proceed this config? Considered values are 1/yes/true
 Fileprefix: apt-  
 *Content:*
 ```
-src - additional path to [basedest]/.apt for repofile creation
-server - Servers's domainname
-inPath - Path within the domainname
-release - Version of the distributuion
-section - Distribution sections
-arch - needed CPU architectures
-proto - used transfer protocol; supported: rsync,http,ftp
-outPath - path to store to; unlike rpm-based repos the full path has to be defined. Example: ${basedest}my.example.com/${inPath}
-enabled - proceed this config? Considered values are 1/yes/true
+src         - additional path to [basedest]/.apt for repofile creation
+server      - servers's domainname
+inPath      - path within the domainname
+release     - version of the distributuion
+section     - distribution sections
+arch        - needed CPU architectures
+proto       - used transfer protocol; supported: rsync,http,ftp
+outPath     - path to store to; unlike rpm-based repos the full path has to be defined.
+              Example: ${basedest}my.example.com/${inPath}
+enabled     - proceed this config? Considered values are 1/yes/true
 ```
 <br/><br/>
 
@@ -77,21 +86,22 @@ enabled - proceed this config? Considered values are 1/yes/true
 Fileprefix: misc-  
 *Content:*  
 ```
-descr - (optional) repository description
-src - URL-path
+descr       - (optional) repository description
+src         - URL-path
 destination - additional subpath to [basedest]
-pull - pull type; supported: rsync,web,wget,http,https,ftp,sftp. REFER #Pulltypes for additional options!
-enabled - proceed this config? Considered values are 1/yes/true
+pull        - pull type; supported: rsync,web,wget,http,https,ftp,sftp
+              REFER #Pulltypes for additional options!
+enabled     - proceed this config? Considered values are 1/yes/true
 ```
 
 ### **Pulltypes for rpm-based repositories**
 #### **rsync**
 no additional options provided.  
-The URL-Path has to be defined without protocol prefix.  
+The URL-path has to be defined without protocol prefix.  
 
 #### **web,wget,http,https,ftp,sftp**
-options - refer wget manpage for supported options  
-cleanup - remove locally non-existent/removed files on host. Considered values are 1/yes/true
+options     - refer wget manpage for supported options  
+cleanup     - remove locally non-existent/removed files on host. Considered values are 1/yes/true
 <br/><br/>
 Remark to options:  
 only use doublequotes for options, otherwise the content will be ignored by wget.  
