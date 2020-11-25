@@ -80,7 +80,6 @@ enabled - proceed this config? Considered values are 1/yes/true
 #### **rsync**
 no additional options provided.  
 The URL-Path has to be defined without protocol prefix.  
-<br/><br/>
 
 #### **web,wget,http,https,ftp,sftp**
 options - refer wget manpage for supported options  
