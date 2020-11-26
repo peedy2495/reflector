@@ -50,7 +50,7 @@ Regarding to apt, don't forget to import needed GPG-keys before trying any apt-c
 There are three types of repository configs
 <br/><br/>
 
-#### **RPMs managed by YUM/DNF**
+#### **Managed by YUM/DNF**
 Fileprefix: yum-  
 *Content:*
 ```
