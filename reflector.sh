@@ -86,15 +86,20 @@ rpm_mirror() {
     if [[ ${enabled,,} =~ ^(1|yes|true)$ ]]; then
 
         if [[ ${pull,,} =~ ^(rsync)$ ]]; then
-            rpm_rsync
+            pull_rsync
         elif [[ ${pull,,} =~ ^(web|wget|http|https|ftp|sftp)$ ]]; then
-            rpm_wget
+            pull_wget
+        fi
+        if [[ ! -z "${yumdir}" ]]; then
+            path="${basedest}.repofiles/${yumdir}"
+            create_yum-repofile
         fi
     fi
     ## unset vars intentionally left duplicates 
     unset tag descr src destination yumdir pull enabled     #rsync config
     unset tag descr src yumdir pull options cleanup enabled #wget config
 }
+
 
 ### create repository definition for yum/dnf pointing to your private webhost
 create_yum-repofile() {
@@ -115,20 +120,16 @@ create_yum-repofile() {
 }
 
 ### create/update repo with rysnc
-rpm_rsync() {
+pull_rsync() {
     echo "syncing from ${src} to ${basedest}${destination} ..."
     if [ ! -d "${basedest}${destination}" ]; then
         mkdir -p ${basedest}${destination}
     fi
     rsync -avrt "rsync://${src}" "${basedest}${destination}" --delete-after
-    if [[ ! -z "${yumdir}" ]]; then
-        path="${basedest}.repofiles/${yumdir}"
-        create_yum-repofile
-    fi
 }
 
 ### create/update repo with wget
-rpm_wget() {
+pull_wget() {
     dest="${src}"
     dest="${dest#http://}"
     dest="${dest#https://}"
@@ -152,10 +153,6 @@ rpm_wget() {
         -P ${basedest}
     if [[ ${cleanup,,} =~ ^(1|yes|true)$ ]]; then
         rpm_wget_cleanup
-    fi
-    if [[ ! -z "${yumdir}" ]]; then
-        path="${basedest}.repofiles/${tag}"
-        create_yum-repofile
     fi
 }
 

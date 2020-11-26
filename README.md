@@ -82,7 +82,7 @@ enabled     - proceed this config? Considered values are 1/yes/true
 ```
 <br/><br/>
 
-#### **RPMs unmanaged or unsupported packagemanager**
+#### **Unmanaged repository or packagemanager not supported**
 Fileprefix: misc-  
 *Content:*  
 ```
